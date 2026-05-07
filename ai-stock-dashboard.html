@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Stock Dashboard</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem;
+      --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9; --color-surface-offset: #edeae5;
+      --color-border: #d4d1ca; --color-divider: #dcd9d5; --color-text: #28251d; --color-text-muted: #6d6b66;
+      --color-text-faint: #a7a49d; --color-text-inverse: #f9f8f4; --color-primary: #01696f; --color-primary-hover: #0c4e54;
+      --color-success: #437a22; --color-warning: #964219; --color-blue: #006494; --color-purple: #7a39bb;
+      --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(22,22,22,.06); --shadow-md: 0 10px 24px rgba(22,22,22,.08);
+      --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      --font-body: 'Satoshi', Inter, sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #22211f;
+      --color-border: #393836; --color-divider: #262523; --color-text: #cdccca; --color-text-muted: #92908b;
+      --color-text-faint: #686662; --color-text-inverse: #171614; --color-primary: #4f98a3; --color-primary-hover: #227f8b;
+      --color-success: #6daa45; --color-warning: #bb653b; --color-blue: #5591c7; --color-purple: #a86fdf;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.2); --shadow-md: 0 10px 24px rgba(0,0,0,.28);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body {
+      min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base); line-height: 1.5;
+      color: var(--color-text); background: var(--color-bg); -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+    .dashboard {
+      display: grid; grid-template-columns: 280px 1fr; grid-template-rows: auto 1fr; height: 100dvh;
+    }
+    .sidebar {
+      grid-row: 1 / -1; background: var(--color-surface); border-right: 1px solid var(--color-border);
+      padding: var(--space-5); overflow-y: auto; overscroll-behavior: contain;
+    }
+    .brand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-8); }
+    .logo {
+      width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+      color: var(--color-primary);
+    }
+    .brand h1 { font-size: var(--text-lg); line-height: 1.1; margin: 0; }
+    .brand p, .meta, .hint, .small { font-size: var(--text-xs); color: var(--color-text-muted); }
+    .nav-section { margin-bottom: var(--space-6); }
+    .nav-title { text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-faint); font-size: var(--text-xs); margin-bottom: var(--space-3); }
+    .nav-list { display: grid; gap: var(--space-2); }
+    .nav-link {
+      display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); text-decoration: none; padding: .8rem .9rem;
+      border-radius: var(--radius-md); background: transparent; border: 1px solid transparent;
+    }
+    .nav-link:hover, .nav-link.active { background: var(--color-surface-2); border-color: var(--color-border); }
+    .badge { font-size: var(--text-xs); padding: .2rem .55rem; border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-primary) 18%, transparent); color: var(--color-primary); }
+    .header {
+      grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+      padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+      backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 5;
+    }
+    .title-wrap h2 { margin: 0; font-size: var(--text-xl); line-height: 1.05; }
+    .title-wrap p { margin: .25rem 0 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+    .header-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+    .control, .search {
+      border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); border-radius: var(--radius-md);
+      min-height: 44px; padding: 0 .9rem; transition: background var(--transition-interactive), border-color var(--transition-interactive);
+    }
+    .search { min-width: 240px; }
+    .control:hover { background: var(--color-surface-2); }
+    .theme-toggle, .menu-toggle { width: 44px; display: grid; place-items: center; padding: 0; }
+    .main { grid-column: 2; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-5); }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); margin-bottom: var(--space-5); }
+    .card {
+      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    }
+    .kpi-card { padding: var(--space-4); }
+    .kpi-card h3 { margin: 0 0 .35rem; font-size: var(--text-sm); color: var(--color-text-muted); }
+    .kpi-value { font-size: var(--text-xl); font-weight: 700; font-variant-numeric: tabular-nums lining-nums; }
+    .layout-grid { display: grid; grid-template-columns: repeat(4, minmax(320px, 1fr)); gap: var(--space-4); align-items: start; }
+    .column { min-width: 0; }
+    .column-head { padding: var(--space-4); border-bottom: 1px solid var(--color-divider); display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; }
+    .column-head h3 { margin: 0; font-size: var(--text-lg); }
+    .column-head p { margin: .4rem 0 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+    .company-list { padding: var(--space-3); display: grid; gap: var(--space-3); }
+    .company-item {
+      padding: var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-2);
+      border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+    }
+    .row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; }
+    .ticker { font-weight: 700; font-size: var(--text-sm); letter-spacing: .04em; }
+    .company-name { margin: .2rem 0 .45rem; font-size: var(--text-base); }
+    .tags { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 .7rem; }
+    .tag { font-size: var(--text-xs); padding: .18rem .5rem; border-radius: var(--radius-full); background: var(--color-surface-offset); color: var(--color-text-muted); }
+    .tag.primary { background: color-mix(in srgb, var(--color-primary) 16%, transparent); color: var(--color-primary); }
+    .tag.blue { background: color-mix(in srgb, var(--color-blue) 16%, transparent); color: var(--color-blue); }
+    .tag.purple { background: color-mix(in srgb, var(--color-purple) 16%, transparent); color: var(--color-purple); }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .55rem .8rem; font-size: var(--text-xs); color: var(--color-text-muted); }
+    .field-grid strong { display: block; color: var(--color-text); font-size: var(--text-xs); font-weight: 500; }
+    .price { font-weight: 700; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+    .placeholder { color: var(--color-warning); }
+    .footer-note { margin-top: var(--space-5); padding: var(--space-4); }
+    .mobile-tabs { display: none; gap: var(--space-2); overflow-x: auto; padding-bottom: var(--space-2); margin-bottom: var(--space-4); }
+    .mobile-tabs button { white-space: nowrap; }
+    .api-box { padding: var(--space-4); margin-top: var(--space-4); }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--text-xs); background: var(--color-surface-offset); padding: .25rem .45rem; border-radius: .4rem; }
+    @media (max-width: 1100px) {
+      .dashboard { grid-template-columns: 76px 1fr; }
+      .sidebar .copy, .sidebar .meta, .sidebar .nav-title, .sidebar .badge, .sidebar .hint { display: none; }
+      .brand { justify-content: center; }
+      .nav-link { justify-content: center; padding: .8rem; }
+      .nav-link span:last-child { display: none; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 860px) {
+      html, body { overflow: auto; }
+      .dashboard { display: block; height: auto; }
+      .sidebar { display: none; position: fixed; inset: 0 auto 0 0; width: min(84vw, 300px); z-index: 20; box-shadow: var(--shadow-md); }
+      .sidebar.open { display: block; }
+      .header, .main { position: static; }
+      .main { padding-top: var(--space-4); }
+      .search { min-width: 0; flex: 1 1 180px; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .layout-grid { grid-template-columns: 1fr; }
+      .mobile-tabs { display: flex; position: sticky; top: 0; z-index: 4; background: var(--color-bg); }
+      .column { scroll-margin-top: 72px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-label="AI Stock Dashboard logo">
+            <path d="M4 18 12 4l8 14"/>
+            <path d="M8 14h8"/>
+          </svg>
+        </div>
+        <div class="copy">
+          <h1>AI Stock Dashboard</h1>
+          <p>Stage one watchlist shell</p>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-title">Columns</div>
+        <div class="nav-list">
+          <a class="nav-link active" href="#nvidia"><span>01</span><span>NVIDIA ecosystem</span></a>
+          <a class="nav-link" href="#medical"><span>02</span><span>Medical AI</span></a>
+          <a class="nav-link" href="#robotics"><span>03</span><span>Robotics AI</span></a>
+          <a class="nav-link" href="#transport"><span>04</span><span>Transportation AI</span></a>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-title">Status</div>
+        <p class="meta">Placeholder dataset loaded. Finnhub-ready fields included for symbol, quote, previous close, change, and timestamp.</p>
+      </div>
+
+      <div class="nav-section api-box card">
+        <div class="nav-title">Finnhub hook</div>
+        <p class="hint">Set your key in <span class="code">state.apiKey</span>. Then call <span class="code">hydrateQuotes()</span> or wire it to your backend cache.</p>
+      </div>
+    </aside>
+
+    <header class="header">
+      <div class="title-wrap">
+        <h2>Stage-one dashboard</h2>
+        <p>Mobile-ready open-source HTML app with placeholder data and Finnhub-ready quote fields.</p>
+      </div>
+      <div class="header-actions">
+        <button class="control menu-toggle" id="menuToggle" aria-label="Open navigation">☰</button>
+        <input class="search" id="searchInput" type="search" placeholder="Filter company or ticker" aria-label="Filter companies" />
+        <button class="control" id="refreshStub">Refresh stub</button>
+        <button class="control theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="kpi-grid" aria-label="Summary metrics">
+        <article class="card kpi-card"><h3>Total tracked</h3><div class="kpi-value" id="kpiTotal">0</div></article>
+        <article class="card kpi-card"><h3>Columns</h3><div class="kpi-value">4</div></article>
+        <article class="card kpi-card"><h3>Live quote fields</h3><div class="kpi-value">Finnhub</div></article>
+        <article class="card kpi-card"><h3>Last refresh</h3><div class="kpi-value" id="kpiUpdated">Stub</div></article>
+      </section>
+
+      <div class="mobile-tabs" aria-label="Jump to section">
+        <button class="control" data-jump="#nvidia">NVIDIA</button>
+        <button class="control" data-jump="#medical">Medical</button>
+        <button class="control" data-jump="#robotics">Robotics</button>
+        <button class="control" data-jump="#transport">Transport</button>
+      </div>
+
+      <section class="layout-grid" id="columns"></section>
+
+      <section class="card footer-note">
+        <p><strong>Notes.</strong> Price values are placeholders in this stage-one build. Each company card already includes fields for <span class="code">finnhubSymbol</span>, <span class="code">livePrice</span>, <span class="code">prevClose</span>, <span class="code">change</span>, and <span class="code">quoteTimestamp</span>.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      apiKey: '',
+      lastUpdated: 'Placeholder data',
+      columns: [
+        {
+          id: 'nvidia',
+          title: 'NVIDIA ecosystem',
+          description: 'NVIDIA plus related customers, partners, and platform adopters.',
+          items: [
+            { company: 'NVIDIA', ticker: 'NVDA', finnhubSymbol: 'NVDA', market: 'NASDAQ', theme: 'GPU / AI platform', relation: 'Core company', priceLimit: '<= 500 filter later', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Super Micro Computer', ticker: 'SMCI', finnhubSymbol: 'SMCI', market: 'NASDAQ', theme: 'AI servers', relation: 'Uses NVIDIA GPUs', priceLimit: '<= 500 filter later', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Dell Technologies', ticker: 'DELL', finnhubSymbol: 'DELL', market: 'NYSE', theme: 'AI infrastructure', relation: 'NVIDIA enterprise systems', priceLimit: '<= 500 filter later', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Oracle', ticker: 'ORCL', finnhubSymbol: 'ORCL', market: 'NYSE', theme: 'Cloud AI', relation: 'Cloud collaboration', priceLimit: '<= 500 filter later', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Microsoft', ticker: 'MSFT', finnhubSymbol: 'MSFT', market: 'NASDAQ', theme: 'Azure AI', relation: 'NVIDIA cloud usage', priceLimit: 'No cap in col.1', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Amazon', ticker: 'AMZN', finnhubSymbol: 'AMZN', market: 'NASDAQ', theme: 'AWS AI', relation: 'NVIDIA cloud usage', priceLimit: 'No cap in col.1', livePrice: null, prevClose: null, change: null, quoteTimestamp: null }
+          ]
+        },
+        {
+          id: 'medical',
+          title: 'Medical AI',
+          description: 'Public companies with marketed medical products and AI relevance.',
+          items: [
+            { company: 'Tempus AI', ticker: 'TEM', finnhubSymbol: 'TEM', market: 'NASDAQ', theme: 'Precision medicine', relation: 'Medical AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: 50.96, prevClose: null, change: null, quoteTimestamp: 'Sample', note: 'Replace with Finnhub quote' },
+            { company: 'Hims & Hers Health', ticker: 'HIMS', finnhubSymbol: 'HIMS', market: 'NYSE', theme: 'Digital health AI', relation: 'Medical AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: 26.11, prevClose: null, change: null, quoteTimestamp: 'Sample', note: 'Replace with Finnhub quote' },
+            { company: 'Medtronic', ticker: 'MDT', finnhubSymbol: 'MDT', market: 'NYSE', theme: 'AI-enabled devices', relation: 'Medical AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'GE HealthCare', ticker: 'GEHC', finnhubSymbol: 'GEHC', market: 'NASDAQ', theme: 'Imaging AI', relation: 'Medical AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Butterfly Network', ticker: 'BFLY', finnhubSymbol: 'BFLY', market: 'NYSE', theme: 'AI ultrasound', relation: 'Medical AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'iRhythm Technologies', ticker: 'IRTC', finnhubSymbol: 'IRTC', market: 'NASDAQ', theme: 'AI diagnostics', relation: 'Medical AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null }
+          ]
+        },
+        {
+          id: 'robotics',
+          title: 'Robotics AI',
+          description: 'Public robotics and automation names with market products.',
+          items: [
+            { company: 'ABB', ticker: 'ABBNY', finnhubSymbol: 'ABBNY', market: 'OTC', theme: 'Industrial robotics', relation: 'Robotics AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'UiPath', ticker: 'PATH', finnhubSymbol: 'PATH', market: 'NYSE', theme: 'Automation AI', relation: 'Robotics AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Symbotic', ticker: 'SYM', finnhubSymbol: 'SYM', market: 'NASDAQ', theme: 'Warehouse robotics', relation: 'Robotics AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'PROCEPT BioRobotics', ticker: 'PRCT', finnhubSymbol: 'PRCT', market: 'NASDAQ', theme: 'Surgical robotics', relation: 'Robotics AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Serve Robotics', ticker: 'SERV', finnhubSymbol: 'SERV', market: 'NASDAQ', theme: 'Delivery robotics', relation: 'Robotics AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'AeroVironment', ticker: 'AVAV', finnhubSymbol: 'AVAV', market: 'NASDAQ', theme: 'Autonomous systems', relation: 'Robotics AI watchlist', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null }
+          ]
+        },
+        {
+          id: 'transport',
+          title: 'Transportation AI',
+          description: 'Grouped later by air, land, water, and space.',
+          items: [
+            { company: 'Mobileye', ticker: 'MBLY', finnhubSymbol: 'MBLY', market: 'NASDAQ', theme: 'Land / ADAS', relation: 'Transportation AI watchlist', segment: 'Land', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Aurora Innovation', ticker: 'AUR', finnhubSymbol: 'AUR', market: 'NASDAQ', theme: 'Land / autonomous trucking', relation: 'Transportation AI watchlist', segment: 'Land', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Joby Aviation', ticker: 'JOBY', finnhubSymbol: 'JOBY', market: 'NYSE', theme: 'Air / eVTOL', relation: 'Transportation AI watchlist', segment: 'Air', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Nauticus Robotics', ticker: 'KITT', finnhubSymbol: 'KITT', market: 'NASDAQ', theme: 'Water / marine autonomy', relation: 'Transportation AI watchlist', segment: 'Water', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Rocket Lab', ticker: 'RKLB', finnhubSymbol: 'RKLB', market: 'NASDAQ', theme: 'Space / launch systems', relation: 'Transportation AI watchlist', segment: 'Space', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null },
+            { company: 'Planet Labs', ticker: 'PL', finnhubSymbol: 'PL', market: 'NYSE', theme: 'Space / geospatial AI', relation: 'Transportation AI watchlist', segment: 'Space', priceLimit: '<= 500 USD/EUR target', livePrice: null, prevClose: null, change: null, quoteTimestamp: null }
+          ]
+        }
+      ]
+    };
+
+    const columnsEl = document.getElementById('columns');
+    const searchInput = document.getElementById('searchInput');
+    const kpiTotal = document.getElementById('kpiTotal');
+    const kpiUpdated = document.getElementById('kpiUpdated');
+    const sidebar = document.getElementById('sidebar');
+
+    function priceMarkup(item) {
+      if (typeof item.livePrice === 'number') {
+        return `<div class="price">${item.livePrice.toFixed(2)}</div>`;
+      }
+      return `<div class="price placeholder">Pending</div>`;
+    }
+
+    function renderColumns(filter = '') {
+      const q = filter.trim().toLowerCase();
+      let count = 0;
+      columnsEl.innerHTML = state.columns.map(col => {
+        const items = col.items.filter(item => {
+          const hay = `${item.company} ${item.ticker} ${item.theme} ${item.segment || ''}`.toLowerCase();
+          return !q || hay.includes(q);
+        });
+        count += items.length;
+        return `
+          <article class="card column" id="${col.id}">
+            <div class="column-head">
+              <div>
+                <h3>${col.title}</h3>
+                <p>${col.description}</p>
+              </div>
+              <span class="badge">${items.length}</span>
+            </div>
+            <div class="company-list">
+              ${items.map(item => `
+                <section class="company-item">
+                  <div class="row">
+                    <div>
+                      <div class="ticker">${item.ticker}</div>
+                      <div class="company-name">${item.company}</div>
+                    </div>
+                    ${priceMarkup(item)}
+                  </div>
+                  <div class="tags">
+                    <span class="tag primary">${item.theme}</span>
+                    <span class="tag">${item.market}</span>
+                    ${item.segment ? `<span class="tag blue">${item.segment}</span>` : ''}
+                    <span class="tag purple">${item.priceLimit}</span>
+                  </div>
+                  <div class="field-grid">
+                    <div><strong>Finnhub symbol</strong>${item.finnhubSymbol}</div>
+                    <div><strong>Relation</strong>${item.relation}</div>
+                    <div><strong>Prev close</strong>${item.prevClose ?? '—'}</div>
+                    <div><strong>Change</strong>${item.change ?? '—'}</div>
+                    <div><strong>Quote time</strong>${item.quoteTimestamp ?? 'Not loaded'}</div>
+                    <div><strong>Backend field</strong>ready</div>
+                  </div>
+                </section>
+              `).join('') || `<section class="company-item"><div class="small">No matches in this column.</div></section>`}
+            </div>
+          </article>
+        `;
+      }).join('');
+      kpiTotal.textContent = count;
+      kpiUpdated.textContent = state.lastUpdated;
+    }
+
+    async function hydrateQuotes() {
+      if (!state.apiKey) {
+        state.lastUpdated = 'API key missing';
+        renderColumns(searchInput.value);
+        return;
+      }
+      const jobs = [];
+      state.columns.forEach(col => col.items.forEach(item => {
+        jobs.push(
+          fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(item.finnhubSymbol)}&token=${encodeURIComponent(state.apiKey)}`)
+            .then(r => r.json())
+            .then(q => {
+              item.livePrice = typeof q.c === 'number' && q.c > 0 ? q.c : item.livePrice;
+              item.prevClose = typeof q.pc === 'number' ? q.pc : item.prevClose;
+              item.change = typeof q.dp === 'number' ? `${q.dp.toFixed(2)}%` : item.change;
+              item.quoteTimestamp = q.t ? new Date(q.t * 1000).toLocaleString() : item.quoteTimestamp;
+            })
+            .catch(() => null)
+        );
+      }));
+      await Promise.all(jobs);
+      state.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      renderColumns(searchInput.value);
+    }
+
+    renderColumns();
+
+    searchInput.addEventListener('input', e => renderColumns(e.target.value));
+    document.getElementById('refreshStub').addEventListener('click', () => {
+      state.lastUpdated = 'Stub refreshed';
+      renderColumns(searchInput.value);
+    });
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const root = document.documentElement;
+      root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+    document.getElementById('menuToggle').addEventListener('click', () => sidebar.classList.toggle('open'));
+    document.querySelectorAll('[data-jump]').forEach(btn => btn.addEventListener('click', () => {
+      const target = document.querySelector(btn.dataset.jump);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+    document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', () => sidebar.classList.remove('open')));
+    window.hydrateQuotes = hydrateQuotes;
+  </script>
+</body>
+</html>

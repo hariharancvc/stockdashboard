@@ -1,0 +1,146 @@
+[
+  {
+    "company": "NVIDIA",
+    "ticker": "NVDA",
+    "finnhubSymbol": "NVDA",
+    "column": "nvidia"
+  },
+  {
+    "company": "Super Micro Computer",
+    "ticker": "SMCI",
+    "finnhubSymbol": "SMCI",
+    "column": "nvidia"
+  },
+  {
+    "company": "Dell Technologies",
+    "ticker": "DELL",
+    "finnhubSymbol": "DELL",
+    "column": "nvidia"
+  },
+  {
+    "company": "Oracle",
+    "ticker": "ORCL",
+    "finnhubSymbol": "ORCL",
+    "column": "nvidia"
+  },
+  {
+    "company": "Microsoft",
+    "ticker": "MSFT",
+    "finnhubSymbol": "MSFT",
+    "column": "nvidia"
+  },
+  {
+    "company": "Amazon",
+    "ticker": "AMZN",
+    "finnhubSymbol": "AMZN",
+    "column": "nvidia"
+  },
+  {
+    "company": "Tempus AI",
+    "ticker": "TEM",
+    "finnhubSymbol": "TEM",
+    "column": "medical"
+  },
+  {
+    "company": "Hims & Hers Health",
+    "ticker": "HIMS",
+    "finnhubSymbol": "HIMS",
+    "column": "medical"
+  },
+  {
+    "company": "Medtronic",
+    "ticker": "MDT",
+    "finnhubSymbol": "MDT",
+    "column": "medical"
+  },
+  {
+    "company": "GE HealthCare",
+    "ticker": "GEHC",
+    "finnhubSymbol": "GEHC",
+    "column": "medical"
+  },
+  {
+    "company": "Butterfly Network",
+    "ticker": "BFLY",
+    "finnhubSymbol": "BFLY",
+    "column": "medical"
+  },
+  {
+    "company": "iRhythm Technologies",
+    "ticker": "IRTC",
+    "finnhubSymbol": "IRTC",
+    "column": "medical"
+  },
+  {
+    "company": "ABB",
+    "ticker": "ABBNY",
+    "finnhubSymbol": "ABBNY",
+    "column": "robotics"
+  },
+  {
+    "company": "UiPath",
+    "ticker": "PATH",
+    "finnhubSymbol": "PATH",
+    "column": "robotics"
+  },
+  {
+    "company": "Symbotic",
+    "ticker": "SYM",
+    "finnhubSymbol": "SYM",
+    "column": "robotics"
+  },
+  {
+    "company": "PROCEPT BioRobotics",
+    "ticker": "PRCT",
+    "finnhubSymbol": "PRCT",
+    "column": "robotics"
+  },
+  {
+    "company": "Serve Robotics",
+    "ticker": "SERV",
+    "finnhubSymbol": "SERV",
+    "column": "robotics"
+  },
+  {
+    "company": "AeroVironment",
+    "ticker": "AVAV",
+    "finnhubSymbol": "AVAV",
+    "column": "robotics"
+  },
+  {
+    "company": "Mobileye",
+    "ticker": "MBLY",
+    "finnhubSymbol": "MBLY",
+    "column": "transport"
+  },
+  {
+    "company": "Aurora Innovation",
+    "ticker": "AUR",
+    "finnhubSymbol": "AUR",
+    "column": "transport"
+  },
+  {
+    "company": "Joby Aviation",
+    "ticker": "JOBY",
+    "finnhubSymbol": "JOBY",
+    "column": "transport"
+  },
+  {
+    "company": "Nauticus Robotics",
+    "ticker": "KITT",
+    "finnhubSymbol": "KITT",
+    "column": "transport"
+  },
+  {
+    "company": "Rocket Lab",
+    "ticker": "RKLB",
+    "finnhubSymbol": "RKLB",
+    "column": "transport"
+  },
+  {
+    "company": "Planet Labs",
+    "ticker": "PL",
+    "finnhubSymbol": "PL",
+    "column": "transport"
+  }
+]

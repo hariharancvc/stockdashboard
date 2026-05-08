@@ -183,7 +183,7 @@
       <div class="header-actions">
         <button class="control menu-toggle" id="menuToggle" aria-label="Open navigation">☰</button>
         <input class="search" id="searchInput" type="search" placeholder="Filter company or ticker" aria-label="Filter companies" />
-        <button class="control" id="refreshStub">Refresh stub</button>
+        <button class="control" id="refreshJson">Reload latest JSON</button>
         <button class="control theme-toggle" id="themeToggle" aria-label="Switch theme">◐</button>
       </div>
     </header>
@@ -206,7 +206,7 @@
       <section class="layout-grid" id="columns"></section>
 
       <section class="card footer-note">
-        <p><strong>Notes.</strong> Price values are placeholders in this stage-one build. Each company card already includes fields for <span class="code">finnhubSymbol</span>, <span class="code">livePrice</span>, <span class="code">prevClose</span>, <span class="code">change</span>, and <span class="code">quoteTimestamp</span>.</p>
+        <p><strong>Notes.</strong> This version loads quote data from <span class="code">./data/quotes.json</span> on page load and when you press <span class="code">Reload latest JSON</span>. The scheduled GitHub Action should keep that JSON file fresh.</p>
       </section>
     </main>
   </div>
@@ -336,38 +336,37 @@
       kpiUpdated.textContent = state.lastUpdated;
     }
 
-    async function hydrateQuotes() {
-      if (!state.apiKey) {
-        state.lastUpdated = 'API key missing';
-        renderColumns(searchInput.value);
-        return;
+    async function loadQuotesFromJson() {
+      try {
+        const res = await fetch(`./data/quotes.json?_=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const quoteData = await res.json();
+        const bySymbol = {};
+        (quoteData.items || []).forEach(item => {
+          bySymbol[item.finnhubSymbol] = item;
+        });
+
+        state.columns.forEach(col => col.items.forEach(item => {
+          const q = bySymbol[item.finnhubSymbol];
+          if (!q) return;
+          item.livePrice = typeof q.currentPrice === 'number' ? q.currentPrice : item.livePrice;
+          item.prevClose = typeof q.prevClose === 'number' ? q.prevClose : item.prevClose;
+          item.change = typeof q.percentChange === 'number' ? `${q.percentChange.toFixed(2)}%` : (q.change ?? item.change);
+          item.quoteTimestamp = q.timestamp ? new Date(q.timestamp * 1000).toLocaleString() : item.quoteTimestamp;
+        }));
+
+        state.lastUpdated = quoteData.updatedAt ? new Date(quoteData.updatedAt * 1000).toLocaleString() : 'JSON loaded';
+      } catch (err) {
+        state.lastUpdated = 'JSON load failed';
       }
-      const jobs = [];
-      state.columns.forEach(col => col.items.forEach(item => {
-        jobs.push(
-          fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(item.finnhubSymbol)}&token=${encodeURIComponent(state.apiKey)}`)
-            .then(r => r.json())
-            .then(q => {
-              item.livePrice = typeof q.c === 'number' && q.c > 0 ? q.c : item.livePrice;
-              item.prevClose = typeof q.pc === 'number' ? q.pc : item.prevClose;
-              item.change = typeof q.dp === 'number' ? `${q.dp.toFixed(2)}%` : item.change;
-              item.quoteTimestamp = q.t ? new Date(q.t * 1000).toLocaleString() : item.quoteTimestamp;
-            })
-            .catch(() => null)
-        );
-      }));
-      await Promise.all(jobs);
-      state.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       renderColumns(searchInput.value);
     }
 
     renderColumns();
+    loadQuotesFromJson();
 
     searchInput.addEventListener('input', e => renderColumns(e.target.value));
-    document.getElementById('refreshStub').addEventListener('click', () => {
-      state.lastUpdated = 'Stub refreshed';
-      renderColumns(searchInput.value);
-    });
+    document.getElementById('refreshJson').addEventListener('click', loadQuotesFromJson);
     document.getElementById('themeToggle').addEventListener('click', () => {
       const root = document.documentElement;
       root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
@@ -378,7 +377,7 @@
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
     document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', () => sidebar.classList.remove('open')));
-    window.hydrateQuotes = hydrateQuotes;
+    window.loadQuotesFromJson = loadQuotesFromJson;
   </script>
 </body>
 </html>

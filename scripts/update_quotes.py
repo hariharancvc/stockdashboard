@@ -199,58 +199,58 @@ def main():
     news_from = (now - timedelta(days=NEWS_LOOKBACK_DAYS)).date().isoformat()
     news_to = now.date().isoformat()
 
-results = []
-errors = []
-
-for item in symbols:
-    symbol = item.get('finnhubSymbol')
-    if not symbol:
-        continue
-
-    try:
-        quote = fetch_quote(symbol)
-        time.sleep(API_PAUSE_SECONDS)
-
-        candles = fetch_candles(symbol, start_ts, end_ts)
-        time.sleep(API_PAUSE_SECONDS)
-
-        news_items = fetch_company_news(symbol, news_from, news_to)
-        time.sleep(API_PAUSE_SECONDS)
-
-        candle_metrics = extract_candle_metrics(candles)
-        result = build_result(item, quote, candle_metrics, news_items)
-        results.append(result)
-
-    except HTTPError as e:
-        errors.append({'symbol': symbol, 'type': 'HTTPError', 'status': e.code, 'message': str(e)})
-    except URLError as e:
-        errors.append({'symbol': symbol, 'type': 'URLError', 'message': str(e)})
-    except Exception as e:
-        errors.append({'symbol': symbol, 'type': 'Exception', 'message': str(e)})
-
-payload = {
-    'updatedAt': int(time.time()),
-    'source': 'finnhub',
-    'ruleVersion': 'v3-helper-functions',
-    'settings': {
-        'resolution': RESOLUTION,
-        'candleLookbackDays': CANDLE_LOOKBACK_DAYS,
-        'newsLookbackDays': NEWS_LOOKBACK_DAYS,
-        'liquidityThresholdUsd': LIQUIDITY_THRESHOLD_USD,
-        'volumeSpikeMultiplier': VOLUME_SPIKE_MULTIPLIER,
-        'breakoutWindow': BREAKOUT_WINDOW,
-    },
-    'items': results,
-    'errors': errors,
-}
-
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-with QUOTES_FILE.open('w', encoding='utf-8') as f:
-    json.dump(payload, f, indent=2)
-
-print(f'Wrote {len(results)} quotes to {QUOTES_FILE}')
-if errors:
-    print(f'Encountered {len(errors)} errors')
+    results = []
+    errors = []
+    
+    for item in symbols:
+        symbol = item.get('finnhubSymbol')
+        if not symbol:
+            continue
+    
+        try:
+            quote = fetch_quote(symbol)
+            time.sleep(API_PAUSE_SECONDS)
+    
+            candles = fetch_candles(symbol, start_ts, end_ts)
+            time.sleep(API_PAUSE_SECONDS)
+    
+            news_items = fetch_company_news(symbol, news_from, news_to)
+            time.sleep(API_PAUSE_SECONDS)
+    
+            candle_metrics = extract_candle_metrics(candles)
+            result = build_result(item, quote, candle_metrics, news_items)
+            results.append(result)
+    
+        except HTTPError as e:
+            errors.append({'symbol': symbol, 'type': 'HTTPError', 'status': e.code, 'message': str(e)})
+        except URLError as e:
+            errors.append({'symbol': symbol, 'type': 'URLError', 'message': str(e)})
+        except Exception as e:
+            errors.append({'symbol': symbol, 'type': 'Exception', 'message': str(e)})
+    
+    payload = {
+        'updatedAt': int(time.time()),
+        'source': 'finnhub',
+        'ruleVersion': 'v3-helper-functions',
+        'settings': {
+            'resolution': RESOLUTION,
+            'candleLookbackDays': CANDLE_LOOKBACK_DAYS,
+            'newsLookbackDays': NEWS_LOOKBACK_DAYS,
+            'liquidityThresholdUsd': LIQUIDITY_THRESHOLD_USD,
+            'volumeSpikeMultiplier': VOLUME_SPIKE_MULTIPLIER,
+            'breakoutWindow': BREAKOUT_WINDOW,
+        },
+        'items': results,
+        'errors': errors,
+    }
+    
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with QUOTES_FILE.open('w', encoding='utf-8') as f:
+        json.dump(payload, f, indent=2)
+    
+    print(f'Wrote {len(results)} quotes to {QUOTES_FILE}')
+    if errors:
+        print(f'Encountered {len(errors)} errors')
 
 
 if __name__ == '__main__':

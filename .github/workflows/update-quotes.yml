@@ -21,9 +21,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
       - name: Run quote update script
-        env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python scripts/update_quotes.py
 
       - name: Commit updated quotes.json

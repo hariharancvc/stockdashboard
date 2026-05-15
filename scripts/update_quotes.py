@@ -1,69 +1,33 @@
 import json
-import os
 import time
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError, URLError
 
-BASE_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = BASE_DIR / 'data'
-SYMBOLS_FILE = DATA_DIR / 'symbols.json'
-QUOTES_FILE = DATA_DIR / 'quotes.json'
-API_KEY = os.getenv('FINNHUB_API_KEY')
-RESOLUTION = 'D'
-CANDLE_LOOKBACK_DAYS = 40
-NEWS_LOOKBACK_DAYS = 7
-LIQUIDITY_THRESHOLD_USD = 10_000_000
-VOLUME_SPIKE_MULTIPLIER = 2.0
+import yfinance as yf
+
+SCRIPT_DIR = Path(__file__).parent.absolute()
+ROOT_DIR = SCRIPT_DIR.parent
+DATA_DIR = ROOT_DIR / "data"
+SYMBOLS_FILE = DATA_DIR / "symbols.json"
+QUOTES_FILE = DATA_DIR / "quotes.json"
+
+LIQUIDITY_THRESHOLD = 10_000_000
+BREAKOUT_PCT = 0.02
 BREAKOUT_WINDOW = 20
-API_PAUSE_SECONDS = 0.7
+VOLUME_SPIKE_MULTIPLIER = 2.0
+API_PAUSE_SECONDS = 0.4
 
-if not API_KEY:
-    raise RuntimeError('FINNHUB_API_KEY is not set')
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-if not SYMBOLS_FILE.exists():
-    raise FileNotFoundError(f'Missing symbols file: {SYMBOLS_FILE}')
-
-with SYMBOLS_FILE.open('r', encoding='utf-8') as f:
-    symbols = json.load(f)
+with open(SYMBOLS_FILE, "r", encoding="utf-8") as f:
+    raw = json.load(f)
+    symbols = raw["items"] if isinstance(raw, dict) and "items" in raw else raw
 
 
-def fetch_json(base_url, params):
-    query = dict(params)
-    query['token'] = API_KEY
-    url = f"{base_url}?{urlencode(query)}"
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urlopen(req, timeout=25) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-
-def fetch_quote(symbol):
-    return fetch_json('https://finnhub.io/api/v1/quote', {'symbol': symbol})
-
-
-def fetch_candles(symbol, start_ts, end_ts):
-    return fetch_json(
-        'https://finnhub.io/api/v1/stock/candle',
-        {
-            'symbol': symbol,
-            'resolution': RESOLUTION,
-            'from': start_ts,
-            'to': end_ts,
-        },
-    )
-
-
-def fetch_company_news(symbol, news_from, news_to):
-    return fetch_json(
-        'https://finnhub.io/api/v1/company-news',
-        {
-            'symbol': symbol,
-            'from': news_from,
-            'to': news_to,
-        },
-    )
+def to_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def numeric_avg(values):
@@ -71,187 +35,138 @@ def numeric_avg(values):
     return sum(nums) / len(nums) if nums else None
 
 
-def extract_candle_metrics(candles):
-    if not isinstance(candles, dict) or candles.get('s') != 'ok':
-        return {}
-
-    closes = candles.get('c', [])
-    highs = candles.get('h', [])
-    volumes = candles.get('v', [])
-    timestamps = candles.get('t', [])
-
-    if len(closes) < BREAKOUT_WINDOW or len(volumes) < BREAKOUT_WINDOW:
-        return {
-            'closes': closes,
-            'highs': highs,
-            'volumes': volumes,
-            'timestamps': timestamps,
-            'avg_volume_20': None,
-            'avg_close_20': None,
-            'avg_dollar_volume_20': None,
-            'latest_volume': volumes[-1] if volumes else None,
-            'latest_close': closes[-1] if closes else None,
-            'prior_breakout_high': None,
-            'latest_candle_time': datetime.fromtimestamp(timestamps[-1], tz=timezone.utc).isoformat() if timestamps else None,
-        }
-
-    recent_closes = closes[-BREAKOUT_WINDOW:]
-    recent_highs = highs[-BREAKOUT_WINDOW:]
-    recent_volumes = volumes[-BREAKOUT_WINDOW:]
-    avg_volume_20 = numeric_avg(recent_volumes)
-    avg_close_20 = numeric_avg(recent_closes)
-    avg_dollar_volume_20 = avg_volume_20 * avg_close_20 if avg_volume_20 and avg_close_20 else None
-    prior_breakout_high = max(recent_highs[:-1]) if len(recent_highs) >= 2 else None
-
-    return {
-        'closes': closes,
-        'highs': highs,
-        'volumes': volumes,
-        'timestamps': timestamps,
-        'avg_volume_20': avg_volume_20,
-        'avg_close_20': avg_close_20,
-        'avg_dollar_volume_20': avg_dollar_volume_20,
-        'latest_volume': recent_volumes[-1] if recent_volumes else None,
-        'latest_close': closes[-1] if closes else None,
-        'prior_breakout_high': prior_breakout_high,
-        'latest_candle_time': datetime.fromtimestamp(timestamps[-1], tz=timezone.utc).isoformat() if timestamps else None,
-    }
+def is_liquid(avg_dollar, threshold=LIQUIDITY_THRESHOLD):
+    return bool(avg_dollar and avg_dollar >= threshold)
 
 
-def is_liquid(avg_dollar_volume_20):
-    return bool(avg_dollar_volume_20 and avg_dollar_volume_20 >= LIQUIDITY_THRESHOLD_USD)
+def has_catalyst(news_items, min_count=1):
+    return len(news_items) >= min_count
 
 
-def has_catalyst(news_items):
-    return bool(isinstance(news_items, list) and len(news_items) > 0)
+def is_breakout(close_price, prior_high, pct=BREAKOUT_PCT):
+    return bool(close_price and prior_high and close_price >= prior_high * (1 + pct))
 
 
-def catalyst_details(news_items):
-    if not isinstance(news_items, list) or not news_items:
-        return None, None, 0
-    first = news_items[0]
-    return first.get('headline'), first.get('source'), len(news_items)
-
-
-def is_breakout(latest_close, prior_breakout_high):
-    return bool(latest_close and prior_breakout_high and latest_close > prior_breakout_high)
-
-
-def has_volume_spike(latest_volume, avg_volume_20):
-    return bool(latest_volume and avg_volume_20 and latest_volume >= VOLUME_SPIKE_MULTIPLIER * avg_volume_20)
+def has_volume_spike(current_volume, avg_volume, mult=VOLUME_SPIKE_MULTIPLIER):
+    return bool(current_volume and avg_volume and current_volume >= avg_volume * mult)
 
 
 def compute_signal(liquid, catalyst, breakout, volume_spike_2x):
     if liquid and catalyst and (breakout or volume_spike_2x):
-        return 'Buy'
+        return "Buy"
     if liquid:
-        return 'Hold'
-    return 'Sell'
+        return "Hold"
+    return "Sell"
 
 
-def build_result(item, quote, candle_metrics, news_items):
-    avg_volume_20 = candle_metrics.get('avg_volume_20')
-    avg_dollar_volume_20 = candle_metrics.get('avg_dollar_volume_20')
-    latest_volume = candle_metrics.get('latest_volume')
-    latest_close = candle_metrics.get('latest_close') or quote.get('c')
-    prior_breakout_high = candle_metrics.get('prior_breakout_high')
+results = []
+errors = []
 
-    liquid = is_liquid(avg_dollar_volume_20)
-    catalyst = has_catalyst(news_items)
-    breakout = is_breakout(latest_close, prior_breakout_high)
-    volume_spike_2x = has_volume_spike(latest_volume, avg_volume_20)
-    signal = compute_signal(liquid, catalyst, breakout, volume_spike_2x)
-    catalyst_headline, catalyst_source, news_count = catalyst_details(news_items)
+for item in symbols:
+    symbol = item.get("finnhubSymbol") or item.get("ticker")
+    if not symbol:
+        continue
+    try:
+        ticker = yf.Ticker(symbol)
+        hist = ticker.history(period="2mo", interval="1d")
 
-    return {
-        'company': item.get('company'),
-        'ticker': item.get('ticker'),
-        'finnhubSymbol': item.get('finnhubSymbol'),
-        'column': item.get('column'),
-        'currentPrice': quote.get('c'),
-        'change': quote.get('d'),
-        'percentChange': quote.get('dp'),
-        'high': quote.get('h'),
-        'low': quote.get('l'),
-        'open': quote.get('o'),
-        'prevClose': quote.get('pc'),
-        'timestamp': quote.get('t'),
-        'liquid': liquid,
-        'avgVolume20': avg_volume_20,
-        'avgDollarVolume20': avg_dollar_volume_20,
-        'latestVolume': latest_volume,
-        'volumeSpike2x': volume_spike_2x,
-        'breakout': breakout,
-        'breakoutLevel': prior_breakout_high,
-        'catalyst': catalyst,
-        'catalystHeadline': catalyst_headline,
-        'catalystSource': catalyst_source,
-        'newsCount7d': news_count,
-        'latestCandleTime': candle_metrics.get('latest_candle_time'),
-        'signal': signal,
-    }
-
-
-def main():
-    now = datetime.now(timezone.utc)
-    start_ts = int((now - timedelta(days=CANDLE_LOOKBACK_DAYS)).timestamp())
-    end_ts = int(now.timestamp())
-    news_from = (now - timedelta(days=NEWS_LOOKBACK_DAYS)).date().isoformat()
-    news_to = now.date().isoformat()
-
-    results = []
-    errors = []
-    
-    for item in symbols:
-        symbol = item.get('finnhubSymbol')
-        if not symbol:
+        if hist.empty:
+            errors.append({"symbol": symbol, "error": "No historical data returned"})
             continue
-    
+
+        closes = hist["Close"].tolist()
+        volumes = hist["Volume"].tolist()
+        latest = hist.iloc[-1]
+
+        latest_close = to_float(latest["Close"])
+        prev_close = to_float(hist.iloc[-2]["Close"]) if len(hist) >= 2 else None
+        latest_volume = to_float(latest["Volume"])
+
+        recent_closes = closes[-BREAKOUT_WINDOW:]
+        prior_high = max(recent_closes[:-1]) if len(recent_closes) > 1 else None
+
+        recent_volumes = volumes[-20:]
+        avg_volume_20 = numeric_avg(recent_volumes[:-1]) if len(recent_volumes) > 1 else None
+
+        avg_dollar_volume_20 = None
+        if avg_volume_20 and latest_close:
+            avg_dollar_volume_20 = round(avg_volume_20 * latest_close)
+
+        percent_change = None
+        if prev_close and latest_close and prev_close != 0:
+            percent_change = round((latest_close - prev_close) / prev_close * 100, 4)
+
+        news_items = []
         try:
-            quote = fetch_quote(symbol)
-            time.sleep(API_PAUSE_SECONDS)
-    
-            candles = fetch_candles(symbol, start_ts, end_ts)
-            time.sleep(API_PAUSE_SECONDS)
-    
-            news_items = fetch_company_news(symbol, news_from, news_to)
-            time.sleep(API_PAUSE_SECONDS)
-    
-            candle_metrics = extract_candle_metrics(candles)
-            result = build_result(item, quote, candle_metrics, news_items)
-            results.append(result)
-    
-        except HTTPError as e:
-            errors.append({'symbol': symbol, 'type': 'HTTPError', 'status': e.code, 'message': str(e)})
-        except URLError as e:
-            errors.append({'symbol': symbol, 'type': 'URLError', 'message': str(e)})
-        except Exception as e:
-            errors.append({'symbol': symbol, 'type': 'Exception', 'message': str(e)})
-    
-    payload = {
-        'updatedAt': int(time.time()),
-        'source': 'finnhub',
-        'ruleVersion': 'v3-helper-functions',
-        'settings': {
-            'resolution': RESOLUTION,
-            'candleLookbackDays': CANDLE_LOOKBACK_DAYS,
-            'newsLookbackDays': NEWS_LOOKBACK_DAYS,
-            'liquidityThresholdUsd': LIQUIDITY_THRESHOLD_USD,
-            'volumeSpikeMultiplier': VOLUME_SPIKE_MULTIPLIER,
-            'breakoutWindow': BREAKOUT_WINDOW,
-        },
-        'items': results,
-        'errors': errors,
-    }
-    
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with QUOTES_FILE.open('w', encoding='utf-8') as f:
-        json.dump(payload, f, indent=2)
-    
-    print(f'Wrote {len(results)} quotes to {QUOTES_FILE}')
-    if errors:
-        print(f'Encountered {len(errors)} errors')
+            news_raw = ticker.news or []
+            news_items = news_raw[:10]
+        except Exception:
+            pass
+
+        headline = None
+        if news_items:
+            try:
+                first = news_items[0]
+                headline = (first.get("content", {}).get("title") or first.get("title") or "")[:100] or None
+            except Exception:
+                pass
+
+        liquid = is_liquid(avg_dollar_volume_20)
+        catalyst = has_catalyst(news_items)
+        breakout = is_breakout(latest_close, prior_high)
+        volume_spike_2x = has_volume_spike(latest_volume, avg_volume_20)
+        signal = compute_signal(liquid, catalyst, breakout, volume_spike_2x)
+
+        quote_ts = int(latest.name.timestamp()) if hasattr(latest.name, "timestamp") else int(time.time())
+
+        results.append({
+            "company": item.get("company", symbol),
+            "ticker": symbol,
+            "finnhubSymbol": symbol,
+            "column": item.get("column", ""),
+            "currentPrice": round(latest_close, 4) if latest_close else None,
+            "prevClose": prev_close,
+            "percentChange": percent_change,
+            "volume": int(latest_volume) if latest_volume else None,
+            "avgVolume20": int(avg_volume_20) if avg_volume_20 else None,
+            "avgDollarVolume20": avg_dollar_volume_20,
+            "timestamp": quote_ts,
+            "liquid": liquid,
+            "catalyst": catalyst,
+            "catalystHeadline": headline,
+            "breakout": breakout,
+            "breakoutLevel": round(prior_high, 4) if prior_high else None,
+            "volumeSpike2x": volume_spike_2x,
+            "signal": signal,
+            "dataSource": "Yahoo Finance / yfinance",
+        })
+
+        time.sleep(API_PAUSE_SECONDS)
+
+    except Exception as e:
+        errors.append({"symbol": symbol, "error": str(e)})
+
+payload = {
+    "updatedAt": int(time.time()),
+    "source": "yahoo_finance",
+    "ruleVersion": "v3-yfinance",
+    "settings": {
+        "liquidityThresholdUsd": LIQUIDITY_THRESHOLD,
+        "breakoutWindow": BREAKOUT_WINDOW,
+        "breakoutPct": BREAKOUT_PCT,
+        "volumeSpikeMultiplier": VOLUME_SPIKE_MULTIPLIER,
+    },
+    "items": results,
+    "errors": errors,
+}
+
+with open(QUOTES_FILE, "w", encoding="utf-8") as f:
+    json.dump(payload, f, indent=2)
+
+print(f"Wrote {len(results)} quotes to {QUOTES_FILE}")
+if errors:
+    print(f"Encountered {len(errors)} errors")
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    pass

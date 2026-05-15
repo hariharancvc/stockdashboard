@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1778834652,
+  "updatedAt": 1778854478,
   "source": "finnhub",
   "ruleVersion": "v3-helper-functions",
   "settings": {
@@ -14,123 +14,147 @@
   "errors": [
     {
       "symbol": "NVDA",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "SMCI",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "DELL",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "ORCL",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "MSFT",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "AMZN",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "TEM",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "HIMS",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "MDT",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "GEHC",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "BFLY",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "IRTC",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "ABBNY",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "PATH",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "SYM",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "PRCT",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "SERV",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "AVAV",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "MBLY",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "AUR",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "JOBY",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "KITT",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "RKLB",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     },
     {
       "symbol": "PL",
-      "type": "Exception",
-      "message": "name 'start_ts' is not defined"
+      "type": "HTTPError",
+      "status": 403,
+      "message": "HTTP Error 403: Forbidden"
     }
   ]
 }

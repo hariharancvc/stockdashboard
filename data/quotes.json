@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1781983074,
+  "updatedAt": 1782034944,
   "source": "yahoo_finance",
   "ruleVersion": "v3-yfinance",
   "settings": {
@@ -86,7 +86,7 @@
       "timestamp": 1781755200,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "The Best Semiconductor ETF to Buy With $1,000 Right Now",
+      "catalystHeadline": "Nvidia, Oracle, and Now SpaceX Are Borrowing Billions Amid the AI Boom. Is This a Warning Sign?",
       "breakout": false,
       "breakoutLevel": 248.15,
       "volumeSpike2x": false,
@@ -128,7 +128,7 @@
       "timestamp": 1781755200,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "SpaceX Surpassed Amazon in Market Cap This Week. What's Next for the Red-Hot Space Stock?",
+      "catalystHeadline": "Amazon quietly building a moat to outlast the AI boom",
       "breakout": false,
       "breakoutLevel": 274.0,
       "volumeSpike2x": false,

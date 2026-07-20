@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1784487514,
+  "updatedAt": 1784537342,
   "source": "yahoo_finance",
   "ruleVersion": "v3-yfinance",
   "settings": {
@@ -86,7 +86,7 @@
       "timestamp": 1784260800,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Oracle Just Hit a Fresh 52-Week Low and Had Its Credit Cut Toward Junk. Has the AI-Capex Panic Overs",
+      "catalystHeadline": "Why Did NFLX, ORCL, SPCX Stocks Slump To 52-Week Lows Last Week?",
       "breakout": false,
       "breakoutLevel": 183.6511,
       "volumeSpike2x": false,
@@ -107,7 +107,7 @@
       "timestamp": 1784260800,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Apple Just Hit an All-Time High. HSBC Thinks It Can Climb Even Higher",
+      "catalystHeadline": "One Date Nvidia Investors Should Not Overlook This July",
       "breakout": false,
       "breakoutLevel": 401.1,
       "volumeSpike2x": false,
@@ -128,7 +128,7 @@
       "timestamp": 1784260800,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Amazon\u2019s Trillion-Dollar Capex Gamble vs Shopify\u2019s Lean Profitability Strategy",
+      "catalystHeadline": "Could AI chip boom make ASML Europe's first trillion-dollar firm?",
       "breakout": false,
       "breakoutLevel": 254.96,
       "volumeSpike2x": false,

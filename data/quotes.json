@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1785610856,
+  "updatedAt": 1785658389,
   "source": "yahoo_finance",
   "ruleVersion": "v3-yfinance",
   "settings": {
@@ -23,7 +23,7 @@
       "timestamp": 1785470400,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "AI trade is a combination of 'perception and reality': Bradley Tusk",
+      "catalystHeadline": "Prediction: Nvidia Stock Will Skyrocket on Aug. 26",
       "breakout": false,
       "breakoutLevel": 212.5,
       "volumeSpike2x": false,
@@ -107,7 +107,7 @@
       "timestamp": 1785470400,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Microsoft (MSFT) Faces Consumer Probes Over Microsoft 365 And Copilot Changes",
+      "catalystHeadline": "Why Now Is Finally the Time to Buy the Big Three Cloud Computing Stocks Before It's Too Late",
       "breakout": true,
       "breakoutLevel": 451.1,
       "volumeSpike2x": false,
@@ -128,7 +128,7 @@
       "timestamp": 1785470400,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Amazon stock soars 15% as e-commerce giant's AWS cloud business booms in 'home run' quarter",
+      "catalystHeadline": "Why Now Is Finally the Time to Buy the Big Three Cloud Computing Stocks Before It's Too Late",
       "breakout": true,
       "breakoutLevel": 254.96,
       "volumeSpike2x": true,

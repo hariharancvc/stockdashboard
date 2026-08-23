@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1787422858,
+  "updatedAt": 1787466700,
   "source": "yahoo_finance",
   "ruleVersion": "v3-yfinance",
   "settings": {
@@ -23,7 +23,7 @@
       "timestamp": 1787284800,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Stock market today: Dow, S&P 500, Nasdaq post weekly losses as bond volatility remains in focus, bit",
+      "catalystHeadline": "Got $500? 1 Cryptocurrency to Buy Hand Over Fist in the Second Half of 2026",
       "breakout": false,
       "breakoutLevel": 225.3,
       "volumeSpike2x": false,
@@ -86,7 +86,7 @@
       "timestamp": 1787284800,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Alphabet, Meta, and Microsoft Are Hiding $3 Trillion in Debt On the AI Boom\u2019s Hidden Ledger",
+      "catalystHeadline": "Nvidia customers face over 15% server price hikes as memory costs soar - report",
       "breakout": false,
       "breakoutLevel": 156.22,
       "volumeSpike2x": false,
@@ -107,7 +107,7 @@
       "timestamp": 1787284800,
       "liquid": true,
       "catalyst": true,
-      "catalystHeadline": "Microsoft Has Something Nvidia Doesn\u2019t and Here\u2019s Why it Matters",
+      "catalystHeadline": "Jim Cramer Was Left Impressed By Microsoft Corporation (NASDAQ:MSFT)\u2019s Conference Call",
       "breakout": false,
       "breakoutLevel": 505.1091,
       "volumeSpike2x": false,
